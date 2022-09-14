@@ -13,7 +13,7 @@ JITSI_ID = None  # If None, the program generates a random UUID
 RING_SFX_PATH = None  # If None, no sound effect plays
 # RING_SFX_PATH = "/home/pi/ring.wav"
 # Enables email notifications
-ENABLE_EMAIL = False
+ENABLE_EMAIL = True
 # Email you want to send the notification from (only works with gmail)
 FROM_EMAIL = 'senderr999@gmail.com'
 # You can generate an app password here to avoid storing your password in plain text
@@ -34,10 +34,13 @@ import signal
 import subprocess
 import smtplib
 import uuid
+import imghdr
+from email.message import EmailMessage
 
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
-from email.MIMEImage import MIMEImage
+# from email.MIMEMultipart import MIMEMultipart
+# from email.MIMEText import MIMEText
+# from email.MIMEImage import MIMEImage
+from email.message import EmailMessage
 
 try:
     import RPi.GPIO as GPIO
@@ -97,7 +100,7 @@ class VideoChat:
         self._process = None
 
     def get_chat_url(self):
-        return "http://meet.jit.si/%s" % self.chat_id
+        return "http://meet.jit.si/%s#config.prejoinPageEnabled=false" % self.chat_id
 
     def start(self):
         if not self._process and self.chat_id:
@@ -124,23 +127,37 @@ class Email:
         self.body = body
 
     def send(self, to_email):
-        msgRoot = MIMEMultipart('related')
-        msgRoot['Subject'] = self.subject
-        msgRoot['From'] = self.sender.email
+        # msgRoot = MIMEMultipart('related')
+        # msgRoot['Subject'] = self.subject
+        # msgRoot['From'] = self.sender.email
+        # msgRoot['To'] = to_email
+        # msgRoot.preamble = self.preamble
+
+        # msgAlternative = MIMEMultipart('alternative')
+        # msgRoot.attach(msgAlternative)
+        # msgText = MIMEText(self.body)
+        # msgAlternative.attach(msgText)
+
+        # smtp = smtplib.SMTP('smtp.gmail.com', 587)
+        # smtp.starttls()
+        # smtp.login(self.sender.email, self.sender.password)
+        # smtp.sendmail(self.sender.email, to_email, msgRoot.as_string())
+        # smtp.quit()
+        msg = EmailMessage()
+        msg['Subject'] = self.subject
+        msg['From'] = self.sender.email
         msgRoot['To'] = to_email
-        msgRoot.preamble = self.preamble
+        msg.set_content('hello')
+        with open (images.jpg) as i:
+            file_data = i.read()
+            file_type = imghdr.what(i.name)
+            file_name = i.name
 
-        msgAlternative = MIMEMultipart('alternative')
-        msgRoot.attach(msgAlternative)
-        msgText = MIMEText(self.body)
-        msgAlternative.attach(msgText)
+        msg.add_attachment(file_data, maintype = 'image', subtype = file_type, filename = file_name)
 
-        smtp = smtplib.SMTP('smtp.gmail.com', 587)
-        smtp.starttls()
-        smtp.login(self.sender.email, self.sender.password)
-        smtp.sendmail(self.sender.email, to_email, msgRoot.as_string())
-        smtp.quit()
-
+        with smtplib.STMP_SSL('smtp.gamil.com', 587) as smtp:
+            smtp.login(self.sender.email, self.sender.password)
+            smtp.send_message(send_message)
 
 class Doorbell:
     def __init__(self, doorbell_button_pin):
